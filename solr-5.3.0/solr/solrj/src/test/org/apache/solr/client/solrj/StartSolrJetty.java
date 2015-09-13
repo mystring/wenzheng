@@ -30,7 +30,7 @@ public class StartSolrJetty
 {
   public static void main( String[] args ) 
   {
-    //System.setProperty("solr.solr.home", "../../../example/solr");
+     System.setProperty("solr.solr.home", "D:\\workspace\\wenzheng\\solr-5.3.0\\solr\\example\\example-DIH\\solr");
 
     Server server = new Server();
     ServerConnector connector = new ServerConnector(server, new HttpConnectionFactory());
@@ -43,7 +43,7 @@ public class StartSolrJetty
     WebAppContext bb = new WebAppContext();
     bb.setServer(server);
     bb.setContextPath("/solr");
-    bb.setWar("webapp/web");
+    bb.setWar("D:\\workspace\\wenzheng\\solr-5.3.0\\solr\\webapp\\web");
 
 //    // START JMX SERVER
 //    if( true ) {
