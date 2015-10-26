@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.mystring.dao.IAdminDAO">
+
+	<resultMap type="Employee" id="resultEmployee">
+		<id column="id" property="id" />
+		<result column="username" property="username" />
+		<result column="password" property="password" />
+		<result column="name" property="name" />
+		<result column="status" property="status" />
+		<association property="company" javaType="Company">
+			<id property="id" column="cid" />
+			<result property="companyName" column="companyName" />
+		</association>
+	</resultMap>
+	<resultMap type="AdminOperaRecords" id="resultRecord">
+		<id column="id" property="id" />
+		<result column="operaTime" property="operaTime" />
+		<result column="ip" property="ip" />
+		<result column="adminID" property="adminID" />
+		<result column="operaContent" property="operaContent" />
+		<result column="operaAdminName" property="operaAdminName" />
+	</resultMap>
+	<resultMap type="Company" id="resultCompany">
+		<id column="id" property="id" />
+		<result column="companyName" property="companyName" />
+		<result column="empNum" property="empNum" />
+		<result column="createTime" property="createTime" />
+		<result column="address" property="address" />
+	</resultMap>
+	<!-- 按用户名查找 -->
+	<select id="selectByUsername" parameterType="string" resultType="Admin">
+		select * from admin where username=#{username}
+	</select>
+	<!-- 修改管理登陆信息 -->
+	<update id="updateLoginTimeAndIp" parameterType="Admin">
+		update admin set
+		lastLoginTime=#{lastLoginTime},lastLoginIp=#{lastLoginIp} where
+		id=#{id}
+	</update>
+	<!-- 修改管理员密码 -->
+	<update id="updateAdminPwd" parameterType="Admin">
+		update admin set
+		password=#{password} where id=#{id}
+	</update>
+	<!-- 插入管理员操作记录 -->
+	<insert id="insertRecord" parameterType="AdminOperaRecords">
+		insert into
+		admin_opera_record(operaTime,ip,adminID,operaContent,operaAdminName)
+		values
+		(#{operaTime},#{ip},#{adminID},#{operaContent},#{operaAdminName})
+	</insert>
+	<!-- 查询所有操作记录 -->
+	<select id="findAllOperaRecords" resultMap="resultRecord">
+		select * from
+		admin_opera_record where adminID=#{admin.id} order by operaTime desc
+		limit
+		#{offset},#{pagesize}
+	</select>
+	<select id="selectRecordNum" resultType="int">
+		select count(0) from
+		admin_opera_record where adminID=#{id}
+	</select>
+	<!-- 公司列表 -->
+	<select id="findAllCompany" resultMap="resultCompany">
+		select* from company where
+		status='Y'
+		limit
+		#{offset},#{pagesize}
+	</select>
+	<select id="detailCompany" resultMap="resultCompany"
+		parameterType="string">
+		select * from company where id=#{id}
+	</select>
+	<!-- 修改公司 -->
+	<update id="updateCompany">
+		update company set
+		companyName=#{companyName},address=#{address} where id=#{id}
+	</update>
+	<select id="selectCompanyNum" resultType="int">
+		select count(0) from
+		company where
+		status='Y'
+	</select>
+	<!-- 增加公司 -->
+	<insert id="addCompany">
+		insert into
+		company(companyName,createTime,address)values
+		(#{companyName},#{createTime},#{address})
+	</insert>
+	<!-- 删除公司 -->
+	<update id="delCompany" parameterType="string">
+		update company set
+		status='N' where id=#{id}
+	</update>
+	<!-- 按照雇员Id查找雇员 -->
+	<select id="selectEmpById" parameterType="int" resultMap="resultEmployee">
+		select
+		e.id id,
+		e.username username,
+		e.password password,
+		e.name name,
+		e.status
+		status,
+		c.id cid,
+		c.companyName companyName
+		from employee
+		e,company c
+		where e.cid=c.id and e.id=#{id}
+	</select>
+	<!-- 查询所有雇员 -->
+	<select id="selectAllEmp" resultMap="resultEmployee"
+		parameterType="map">
+		select e.id id,
+		e.username username,
+		e.password password,
+		e.name name,
+		e.status status,
+		c.id cid,
+		c.companyName,companyName
+		from
+		employee e,company c where e.cid=c.id limit #{offset},#{pagesize}
+	</select>
+	<select id="selectEmpNum" resultType="int">
+		select count(0) from
+		employee
+	</select>
+	<!-- 增加雇员 -->
+	<insert id="addEmployee" parameterType="Employee">
+		insert into
+		employee(username,password,name,cid,role)
+		values(#{username},#{password},#{name},#{company.id},#{role})
+	</insert>
+	<!-- 删除雇员 -->
+	<delete id="delEmployee" parameterType="string">
+		delete from employee
+		where id=#{id}
+	</delete>
+	<!-- 更新雇员 -->
+	<update id="updataEmp" parameterType="Employee">
+		update employee set
+		username=#{username},
+		password=#{password},
+		name=#{name},
+		status=#{status},
+		cid=#{company.id}
+		where id=#{id}
+	</update>
+	<insert id="insertNotice" parameterType="com.mystring.pojo.Notice">
+		insert into notice
+		(title,content,time) values (#{title},#{content},#{time})
+	</insert>
+	<select id="selectNotice" resultType="com.mystring.pojo.Notice">
+		select * from notice order by time desc limit 0,5
+	</select>
+</mapper>

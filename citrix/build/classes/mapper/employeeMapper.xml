@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.mystring.dao.IEmployeeDAO">
+	<resultMap type="Employee" id="resultEmployee">
+		<id column="id" property="id" />
+		<result column="username" property="username" />
+		<result column="password" property="password" />
+		<result column="name" property="name" />
+		<result column="status" property="status" />
+		<result column="eaddress" property="eaddress" />
+		<association property="company" javaType="Company">
+			<id property="id" column="cid" />
+			<result property="companyName" column="companyName" />
+		</association>
+	</resultMap>
+	<resultMap type="Orders" id="resultOrders">
+		<id property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="tel" column="tel" />
+		<result property="address" column="address" />
+		<result property="status" column="status" />
+		<result property="insertTime" column="insertTime" />
+		<result property="sendTime" column="sendTime" />
+		<result property="receiveTime" column="receiveTime"></result>
+		<result property="position" column="position" />
+		<association property="company" javaType="Company">
+			<id property="id" column="cid" />
+			<result property="companyName" column="companyName" />
+		</association>
+	</resultMap>
+	<resultMap type="com.mystring.pojo.Message" id="resultMessage">
+		<id column="id" property="id" />
+		<result column="msg" property="msg" />
+		<result column="time" property="time" />
+		<result column="oid" property="oid" />
+		<result column="tel" property="tel" />
+		<result column="name" property="name" />
+		<result column="cid" property="cid" />
+	</resultMap>
+	<select id="selectEmpByUsername" resultMap="resultEmployee"
+		parameterType="string">
+		select
+		e.id id,
+		e.username username,
+		e.password password,
+		e.name name,
+		e.status status,
+		c.id cid,
+		c.companyName companyName,
+		e.eaddress eaddress
+		from employee
+		e,company c where e.cid=c.id and
+		e.username=#{username}
+	</select>
+	<insert id="addOrders" parameterType="Orders">
+		insert into orders
+		(id,name,tel,address,status,insertTime,sendTime,receiveTime,cid,position)
+		values(
+		#{id},#{name},#{tel},#{address},#{status},#{insertTime},#{sendTime},#{receiveTime},#{company.id},#{position})
+	</insert>
+	<select id="selectOrdersByConditons" resultMap="resultOrders"
+		parameterType="map">
+		select o.id id,o.name name,o.tel tel,o.address address,o.status
+		status,o.insertTime insertTime,o.sendTime sendTime,o.receiveTime
+		receiveTime,o.cid cid,o.position,c.companyName companyName
+		from orders
+		o,company c
+		where c.id=o.cid
+		<if test="company.id!=null">
+			and o.cid=#{company.id}
+		</if>
+		<if test="status!=null">
+			and o.status=#{status}
+		</if>
+		<if test="name!=null and name!=''">
+			and o.name  like'%${name}%'
+		</if>
+		<if test="tel!=null and tel!=''">
+			and o.tel  like'%${tel}%'
+		</if>
+		order by o.insertTime desc limit #{offset},#{pagesize}
+	</select>
+	<select id="selectOrderById" parameterType="string" resultMap="resultOrders">
+		select o.id id,o.name name,o.tel tel,o.address address,o.status
+		status,o.insertTime insertTime,o.sendTime sendTime,o.receiveTime
+		receiveTime,o.cid cid,o.position position,c.companyName companyName
+		from orders o,company c
+		where c.id=o.cid and o.id=#{id}
+	</select>
+	<select id="selectTotalNumByCidAndStatus" resultType="int">
+		select
+		count(0) from orders where cid=#{company.id} and status=#{status}
+		<if test="name!=null and name!=''">
+			and name like'%${name}%'
+		</if>
+		<if test="tel!=null and tel!=''">
+			and tel like'%${tel}%'
+		</if>
+	</select>
+	<update id="updateOrderStatus" parameterType="map">
+		update orders set status=#{status}
+		<if test="sendTime!=null">
+			, sendTime=#{sendTime}
+		</if>
+		<if test="receiveTime!=null">
+			,receiveTime=#{receiveTime}
+		</if>
+		where id=#{id}
+	</update>
+	<select id="selectOrdersByConditons1" parameterType="java.util.Map"
+		resultMap="resultOrders">
+		select * from (
+		select o.oid id,o.receiveName
+		name,o.receiveTel tel,o.receiveAddress address,o.cid cid,c.companyName
+		companyName,o.ostatus flag1
+		from records o,company c
+		where c.id=o.cid
+		and o.cid=#{cid} and o.oid=#{oid} order by o.nowTime DESC limit 0,1 )
+		a where a.flag1=#{status}
+	</select>
+	<insert id="insertRecord" parameterType="com.mystring.pojo.Records">
+		insert into
+		records(cid,oid,receiveName,receiveTel,receiveAddress,ostatus,nowAddress,nowTime,ename)
+		values
+		(#{company.id},#{oid},#{receiveName},#{receiveTel},#{receiveAddress},#{ostatus},#{nowAddress},#{nowTime},#{nowEmp.name})
+	</insert>
+	<insert id="insertMsg" parameterType="com.mystring.pojo.Message">
+		insert into message
+		(oid,time,msg,tel,name,cid) values(
+		#{oid},#{time},#{msg},#{tel},#{name},#{cid}
+		)
+	</insert>
+	<select id="selectMessagesByCid" parameterType="java.util.HashMap"
+		resultMap="resultMessage">
+		select id,oid,time,msg,tel,name from message m where
+		m.cid=#{cid} limit #{offset},#{pagesize}
+	</select>
+	<select id="selectMsgNumByCid" parameterType="int" resultType="int">
+		select count(0) from message m where m.cid=#{cid}
+	</select>
+	<select id="selectRecordsById" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		select * from records where oid=#{oid} order by nowTime desc
+	</select>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
